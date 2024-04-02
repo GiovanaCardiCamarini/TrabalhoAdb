@@ -1,0 +1,90 @@
+--QUESTÃO 1
+
+-- ****** B) Criar a banco de dados *****
+
+
+select
+'
+CREATE DATABASE trabalho.
+    WITH 
+    OWNER = postgres   
+    CONNECTION LIMIT = -1;
+'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'trabalho')\gexec
+ALTER DATABASE trabalho SET datestyle TO 'ISO, DMY';
+
+\c trabalho 
+
+-- ****** C) Criar a sequencias para as tabelas *****
+
+create SEQUENCE sid_paciente;
+create SEQUENCE sid_medico;
+create SEQUENCE sid_atende;
+create SEQUENCE sid_cirurgia;
+
+-- ****** D) Criar a tabelas do sistema *****
+
+CREATE TABLE paciente (
+id_paciente serial unique,
+codigo varchar(3),
+nome varchar(20),
+idade integer,
+constraint pk_paciente primary key (id_paciente)
+);
+
+CREATE TABLE medico (
+id_medico serial unique,
+crm varchar(3),
+nome varchar(20),
+especialidade varchar(20),
+constraint pk_medico primary key (id_medico)
+);
+
+CREATE TABLE atende (
+id_atende serial unique,
+id_paciente integer,
+id_medico integer,
+data_atende date,
+constraint fk_atende_paciente foreign key (id_paciente) references paciente (id_paciente),
+constraint fk_atende_medico foreign key (id_medico) references medico (id_medico),
+constraint pk_atende primary key (id_atende)
+);
+
+CREATE TABLE cirurgia (
+id_cirurgia serial unique,
+codigo varchar(3),
+data_cirurgia date,
+descricao varchar(50),
+id_paciente integer,
+constraint fk_cirurgia_paciente foreign key (id_paciente) references paciente (id_paciente),
+constraint pk_cirurgia primary key (id_cirurgia)
+);
+
+insert into paciente values (nextval('sid_paciente'),'p1','João', 12); 
+insert into paciente values (nextval('sid_paciente'),'p2','Maria', 38); 
+insert into paciente values (nextval('sid_paciente'),'p3','Pedro', 21); 
+insert into paciente values (nextval('sid_paciente'),'p4','Antônio', 29); 
+
+select * from paciente;
+
+insert into medico values (nextval('sid_medico'),'m1','Marcos', 'Oftalmologista'); 
+insert into medico values (nextval('sid_medico'),'m2','Tereza', 'Clinico Geral'); 
+insert into medico values (nextval('sid_medico'),'m3','Paulo', 'Pediatra'); 
+insert into medico values (nextval('sid_medico'),'m4','João', 'Clinico Geral'); 
+
+select * from medico;
+
+insert into atende values (nextval('sid_atende'),1, 2, '09-02-2008'); 
+insert into atende values (nextval('sid_atende'),2, 1, '26-03-2006'); 
+insert into atende values (nextval('sid_atende'),3, 3, '11-09-2003'); 
+insert into atende values (nextval('sid_atende'),1, 4, '13-10-2007'); 
+insert into atende values (nextval('sid_atende'),2, 2, '08-05-2008'); 
+
+select * from atende;
+
+insert into cirurgia values (nextval('sid_cirurgia'),'c1','25-07-2008','Apendicite', 1); 
+insert into cirurgia values (nextval('sid_cirurgia'),'c2','07-02-2001','Retirada de cáuculo renal', 2); 
+insert into cirurgia values (nextval('sid_cirurgia'),'c3','14-11-2007','Unha encravda' ,3); 
+insert into cirurgia values (nextval('sid_cirurgia'),'c4','23-01-2008','Implante de silicone' ,2); 
+
+select * from cirurgia;
