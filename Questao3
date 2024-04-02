@@ -1,0 +1,22 @@
+CREATE OR REPLACE FUNCTION quantidade_atendimentos(
+    data_inicial date,
+    data_final date
+)
+RETURNS SETOF RECORD AS $$
+DECLARE
+    rec RECORD;
+BEGIN
+    FOR rec IN SELECT medico.nome, COUNT(atende.id_atende) AS quantidade_atendimentos
+               FROM medico
+               INNER JOIN atende ON medico.id_medico = atende.id_medico
+               WHERE atende.data_atende BETWEEN data_inicial AND data_final
+               GROUP BY medico.nome
+    LOOP
+        RETURN NEXT rec;
+    END LOOP;
+    
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * from quantidade_atendimentos('01-01-2003', '31-12-2006') AS (nome_medico varchar(20), atendimentos bigint);
