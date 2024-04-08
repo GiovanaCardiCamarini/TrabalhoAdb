@@ -1,0 +1,42 @@
+CREATE OR REPLACE FUNCTION criar_cirurgia(
+    codigo_cirurgia varchar(3),
+    codigo_paciente varchar(3),
+    data_cirurgia_func date,
+    descricao varchar(50)
+)
+RETURNS VOID AS $$
+DECLARE
+    count_existing integer;
+BEGIN
+    -- Verificar se o paciente existe
+    IF NOT EXISTS (SELECT 1 FROM paciente WHERE codigo = codigo_paciente) THEN
+        RAISE EXCEPTION 'Paciente com código % não encontrado.', codigo_paciente;
+    END IF;
+    
+    -- Verificar se a cirurgia com o mesmo código e data já existe para o mesmo paciente
+    SELECT COUNT(*) INTO count_existing
+    FROM cirurgia
+    WHERE codigo = codigo_cirurgia
+    AND cirurgia.data_cirurgia = data_cirurgia_func
+    AND id_paciente = (SELECT id_paciente FROM paciente WHERE codigo = codigo_paciente);
+    
+    IF count_existing > 0 THEN
+        RAISE EXCEPTION 'Já existe uma cirurgia com o mesmo código, data e paciente.';
+    END IF;
+
+    -- Inserir a nova cirurgia
+    INSERT INTO cirurgia (codigo, data_cirurgia, descricao, id_paciente)
+    VALUES (codigo_cirurgia, data_cirurgia_func, descricao, (SELECT id_paciente FROM paciente WHERE codigo = codigo_paciente));
+END;
+$$ LANGUAGE plpgsql;
+
+-- Teste 1: Cirurgia com paciente existente e sem conflito de código e data
+SELECT criar_cirurgia('c5', 'p2', '2024-04-02', 'Implante capilar');
+
+-- Teste 2: Tentativa de criar cirurgia para paciente inexistente
+SELECT criar_cirurgia('c6', 'p5', '2024-04-02', 'Cirurgia teste');
+
+-- Teste 3: Tentativa de criar cirurgia com mesmo código, data e paciente já existente
+SELECT criar_cirurgia('c5', 'p2', '2024-04-02', 'Nova cirurgia para mesmo paciente e data');
+
+SELECT * FROM cirurgia;
